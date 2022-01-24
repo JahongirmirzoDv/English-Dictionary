@@ -293,11 +293,9 @@ class HomeFragment : Fragment() {
     private fun copyText() {
         val clipboard =
             activity?.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        if (binding.search.text.isNotEmpty()) {
-            var clip = ClipData.newPlainText("word", binding.search.text.toString())
-            clipboard.setPrimaryClip(clip)
-            Toast.makeText(requireContext(), "Copy", Toast.LENGTH_SHORT).show()
-        }
+        var clip = ClipData.newPlainText("word", binding.word.text.toString())
+        clipboard.setPrimaryClip(clip)
+        Toast.makeText(requireContext(), "Copy", Toast.LENGTH_SHORT).show()
     }
 
     private fun setDate() {
