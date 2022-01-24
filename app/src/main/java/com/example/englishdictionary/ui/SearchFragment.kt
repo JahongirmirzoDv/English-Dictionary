@@ -154,6 +154,17 @@ class SearchFragment : Fragment() {
     private fun loadUI() {
         SharedPref.getInstanceDis(requireContext())
         binding.word.text = SharedPref.word
+        viewModel.getLatest().observe(viewLifecycleOwner, {
+            for (i in it) {
+                if (i.word == SharedPref.word) {
+                    if (i.saved == true) {
+                        binding.cardSave.setImageResource(R.drawable.benchmark1)
+                    } else {
+                        binding.cardSave.setImageResource(R.drawable.benchmark2)
+                    }
+                }
+            }
+        })
     }
 
     private fun setViewPager() {

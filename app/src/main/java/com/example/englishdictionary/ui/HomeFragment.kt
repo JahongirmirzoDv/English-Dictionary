@@ -77,11 +77,15 @@ class HomeFragment : Fragment() {
         wordsList = HashMap()
         SharedPref.getInstanceDis(requireContext())
         setupViewModel()
+        if (SharedPref.word != null) {
+            binding.word.text = SharedPref.word
+        } else {
+            binding.word.text = "Book"
+        }
         suggestion()
         workUI()
         loadHistory()
         loadSaved()
-        wordRequest("Book")
 
         return binding.root
     }
@@ -117,7 +121,7 @@ class HomeFragment : Fragment() {
             wordsRvAdapter.notifyDataSetChanged()
             wordsRvAdapter.onpress = object : WordsRvAdapter.onPress {
                 override fun onclick(history: History) {
-                    GlobalScope.launch {
+                    GlobalScope.launch(Dispatchers.Main) {
                         if (history.saved == false) {
                             viewModel.updateHistroy(
                                 History(
@@ -128,6 +132,7 @@ class HomeFragment : Fragment() {
                                     audio = history.audio
                                 )
                             )
+                            binding.cardSave.setImageResource(R.drawable.benchmark1)
                         } else {
                             viewModel.updateHistroy(
                                 History(
@@ -138,6 +143,7 @@ class HomeFragment : Fragment() {
                                     audio = history.audio
                                 )
                             )
+                            binding.cardSave.setImageResource(R.drawable.benchmark2)
                         }
                     }
                 }
@@ -157,7 +163,7 @@ class HomeFragment : Fragment() {
                 wordsRvAdapter.notifyDataSetChanged()
                 wordsRvAdapter.onpress = object : WordsRvAdapter.onPress {
                     override fun onclick(history: History) {
-                        GlobalScope.launch {
+                        GlobalScope.launch(Dispatchers.Main) {
                             if (history.saved == false) {
                                 viewModel.updateHistroy(
                                     History(
@@ -168,6 +174,7 @@ class HomeFragment : Fragment() {
                                         audio = history.audio
                                     )
                                 )
+                                binding.cardSave.setImageResource(R.drawable.benchmark1)
                             } else {
                                 viewModel.updateHistroy(
                                     History(
@@ -178,6 +185,7 @@ class HomeFragment : Fragment() {
                                         audio = history.audio
                                     )
                                 )
+                                binding.cardSave.setImageResource(R.drawable.benchmark2)
                             }
                         }
                     }
@@ -197,49 +205,49 @@ class HomeFragment : Fragment() {
         }
         binding.card2.setOnClickListener {
             var uri = ""
-            if (binding.search.text.isNotEmpty()) {
-                viewModel.getLatest().observe(viewLifecycleOwner, {
+            viewModel.getLatest().observe(viewLifecycleOwner, {
+                if (it.isEmpty()) {
+                    uri = "//ssl.gstatic.com/dictionary/static/sounds/20200429/book--_gb_1.mp3"
+                } else {
                     for (i in it) {
-                        if (binding.search.text.toString() == i.word) {
+                        if (SharedPref.word == i.word) {
                             if (i.audio != null) {
                                 uri = i.audio.toString()
                                 break
                             }
                         }
                     }
-                })
-                if (uri != "") {
-                    playSound(uri)
                 }
-            } else playSound("//ssl.gstatic.com/dictionary/static/sounds/20200429/book--_gb_1.mp3")
+            })
+            if (uri != "") {
+                playSound(uri)
+            }
         }
         binding.card3.setOnClickListener {
             for (i in history_List) {
-                if (binding.search.text.toString().isNotEmpty()) {
-                    if (i.word == binding.search.text.toString()) {
-                        if (i.saved == false) {
-                            viewModel.updateHistroy(
-                                History(
-                                    id = i.id,
-                                    word = i.word.toString(),
-                                    origin = i.origin,
-                                    saved = true,
-                                    audio = i.audio
-                                )
+                if (i.word == binding.word.text.toString()) {
+                    if (i.saved == false) {
+                        viewModel.updateHistroy(
+                            History(
+                                id = i.id,
+                                word = i.word.toString(),
+                                origin = i.origin,
+                                saved = true,
+                                audio = i.audio
                             )
-                            binding.cardSave.setImageResource(R.drawable.benchmark1)
-                        } else {
-                            viewModel.updateHistroy(
-                                History(
-                                    id = i.id,
-                                    word = i.word.toString(),
-                                    origin = i.origin,
-                                    saved = false,
-                                    audio = i.audio
-                                )
+                        )
+                        binding.cardSave.setImageResource(R.drawable.benchmark1)
+                    } else {
+                        viewModel.updateHistroy(
+                            History(
+                                id = i.id,
+                                word = i.word.toString(),
+                                origin = i.origin,
+                                saved = false,
+                                audio = i.audio
                             )
-                            binding.cardSave.setImageResource(R.drawable.benchmark2)
-                        }
+                        )
+                        binding.cardSave.setImageResource(R.drawable.benchmark2)
                     }
                 }
             }
@@ -328,6 +336,7 @@ class HomeFragment : Fragment() {
                 activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(view.windowToken, 0)
             binding.search.dismissDropDown()
+            SharedPref.word = text
         }
         binding.search.setOnEditorActionListener { v, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_ACTION_NEXT) {
@@ -348,6 +357,7 @@ class HomeFragment : Fragment() {
                 activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
             imm.hideSoftInputFromWindow(view?.windowToken, 0)
             binding.search.dismissDropDown()
+            SharedPref.word = v.text.toString()
             true
         }
     }
@@ -416,20 +426,22 @@ class HomeFragment : Fragment() {
         if (binding.search.text.toString().isNotEmpty()) {
             SharedPref.word = binding.search.text.toString()
         } else {
-            SharedPref.word = "Book"
+            SharedPref.word = binding.word.text.toString()
         }
-        if (binding.search.text.isNotEmpty()) {
-            viewModel.getLatest().observe(viewLifecycleOwner, {
+        viewModel.getLatest().observe(viewLifecycleOwner, {
+            if (it.isEmpty()) {
+                SharedPref.audio =
+                    "//ssl.gstatic.com/dictionary/static/sounds/20200429/book--_gb_1.mp3"
+            } else {
                 for (i in it) {
-                    if (binding.search.text.toString() == i.word) {
+                    if (binding.search.text.toString() == i.word || binding.word.toString() == i.word) {
                         if (i.audio != null) {
-                            SharedPref.audio = i.audio
+                            SharedPref.audio = i.audio.toString()
                             break
                         }
                     }
                 }
-            })
-        } else SharedPref.audio =
-            "//ssl.gstatic.com/dictionary/static/sounds/20200429/book--_gb_1.mp3"
+            }
+        })
     }
 }
