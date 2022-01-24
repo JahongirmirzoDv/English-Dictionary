@@ -210,7 +210,7 @@ class HomeFragment : Fragment() {
                     uri = "//ssl.gstatic.com/dictionary/static/sounds/20200429/book--_gb_1.mp3"
                 } else {
                     for (i in it) {
-                        if (SharedPref.word == i.word) {
+                        if (SharedPref.word == i.word || binding.word.text.toString() == i.word) {
                             if (i.audio != null) {
                                 uri = i.audio.toString()
                                 break
@@ -316,6 +316,9 @@ class HomeFragment : Fragment() {
                 if (i == text.toString()) {
                     binding.cardSave.setImageResource(R.drawable.benchmark1)
                 } else binding.cardSave.setImageResource(R.drawable.benchmark2)
+            }
+            if (text.toString() == "") {
+                binding.word.text = SharedPref.word
             }
         }
         binding.search.setOnItemClickListener { parent, view, position, id ->
